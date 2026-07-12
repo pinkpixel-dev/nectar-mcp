@@ -2,6 +2,12 @@
   <img src="./logo.png" width="300" alt="Nectar MCP logo" />
 </p>
 
+<p align="center">
+  <a href="https://pollinations.ai">
+    <img src="./pollinations-badge.svg" width="200" alt="Pollinations.ai" />
+  </a>
+</p>
+
 # Nectar MCP
 
 Nectar is a stdio MCP server for Pollinations image and video generation. It gives MCP clients a small, focused toolset for generating images, editing images, generating videos, listing available image/video models, and checking pollen balance.
