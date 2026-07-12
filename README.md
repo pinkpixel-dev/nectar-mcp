@@ -8,6 +8,8 @@
   </a>
 </p>
 
+[![nectar-mcp MCP server](https://glama.ai/mcp/servers/pinkpixel-dev/nectar-mcp/badges/score.svg)](https://glama.ai/mcp/servers/pinkpixel-dev/nectar-mcp)
+
 # Nectar MCP
 
 Nectar is a stdio MCP server for Pollinations image and video generation. It gives MCP clients a small, focused toolset for generating images, editing images, generating videos, listing available image/video models, and checking pollen balance.
