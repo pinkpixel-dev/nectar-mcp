@@ -36,13 +36,6 @@ Generated images, edited images, and videos are saved locally by default. Set `N
 
 ## Install
 
-For local development:
-
-```bash
-npm install
-npm run build
-```
-
 ## MCP Client Config
 
 Most MCP clients should pass the API key through the server `env` block:
@@ -50,9 +43,9 @@ Most MCP clients should pass the API key through the server `env` block:
 ```json
 {
   "mcpServers": {
-    "nectar": {
-      "command": "node",
-      "args": ["/absolute/path/to/nectar-mcp/dist/index.js"],
+    "pixara": {
+      "command": "npx",
+      "args": ["-y", "@pinkpixel/nectar-mcp"],
       "env": {
         "POLLINATIONS_API_KEY": "sk_your_key_here",
         "NECTAR_OUTPUT_DIR": "/absolute/path/to/nectar-output"
@@ -62,14 +55,22 @@ Most MCP clients should pass the API key through the server `env` block:
 }
 ```
 
-For package-based usage after publishing:
+
+For local development:
+
+```bash
+git clone https://github.com/pinkpixel-dev/nectar-mcp.git
+cd nectar-mcp
+npm install
+npm run build
+```
 
 ```json
 {
   "mcpServers": {
     "nectar": {
-      "command": "npx",
-      "args": ["nectar-mcp"],
+      "command": "node",
+      "args": ["/absolute/path/to/nectar-mcp/dist/index.js"],
       "env": {
         "POLLINATIONS_API_KEY": "sk_your_key_here",
         "NECTAR_OUTPUT_DIR": "/absolute/path/to/nectar-output"
