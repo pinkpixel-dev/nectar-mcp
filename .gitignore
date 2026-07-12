@@ -1,0 +1,15 @@
+dist/
+node_modules/
+
+.env
+.env.*
+
+*.log
+npm-debug.log*
+
+API.md
+CHANGELOG.md
+ERRORS.md
+MEMORY.md
+OVERVIEW.md
+ROADMAP.md
