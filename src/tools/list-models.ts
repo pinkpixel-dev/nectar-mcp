@@ -6,9 +6,9 @@ import { PollinationsClient, type PollinationsModel } from "../lib/pollinations-
 import { toToolError } from "../lib/errors.js";
 
 const LIST_MODELS_DESCRIPTION = [
-  "List currently available Pollinations image and video models from /image/models. Results are cached in memory for 15 minutes, so repeated calls are fast. Use this before generation when model choice, pricing, modality, reference-image support, end-frame support, or audio support is unclear. This tool does not require POLLINATIONS_API_KEY.",
+  "List currently available Pollinations image, video, and audio models. Image and video models come from /image/models. Audio models come from /audio/models. Each catalog is cached in memory for 15 minutes. Use this before generation when model choice, pricing, modality, voices, reference-image support, end-frame support, or audio support is unclear. This tool does not require POLLINATIONS_API_KEY.",
   "Args:",
-  "- modality (string, optional, default all): all, image, or video. Use image before image generation/editing. Use video before video generation.",
+  "- modality (string, optional, default all): all, image, video, or audio. Use image before image generation/editing, video before video generation, and audio before speech, music, or sound-effect generation.",
   "- search (string, optional): Case-insensitive search across model names, aliases, brands, descriptions, pricing, capabilities, and raw metadata. Examples: 'gpt', 'transparent', 'end_frame', 'audio', 'seedance', 'banana', 'edit'. Do not use search='cheap' to find cheapest; inspect the Pricing lines instead.",
   "- limit (number, optional, default 50, max 100): Maximum number of models to return.",
   "- detail (string, optional, default summary): summary returns compact model cards; full returns richer metadata for listed models. For one model, prefer pollinations_get_model_details.",
@@ -17,19 +17,19 @@ const LIST_MODELS_DESCRIPTION = [
   "- paid_only (boolean, optional): Filter by paid_only flag.",
   "- supports_reference_images (boolean, optional): true returns models with max_reference_images > 0.",
   "- supports_end_frame (boolean, optional): true returns video models with end_frame capability.",
-  "- supports_audio (boolean, optional): true returns models that output audio or support audio_output.",
-  "- refresh (boolean, optional, default false): Bypass the 15-minute in-memory cache and refetch /image/models.",
+  "- supports_audio (boolean, optional): true returns audio catalog models or visual models that output audio or support audio_output.",
+  "- refresh (boolean, optional, default false): Bypass the applicable 15-minute in-memory catalog cache.",
   "- response_format (string, optional, default markdown): markdown for readable summaries, json for structured compact/full metadata.",
   "Returns: Compact model names, category, pricing, input/output modalities, and key capability flags by default. Use pollinations_get_model_details for complete raw metadata for one model.",
-  "Examples: Cheapest images: modality=image, sort_by=price, sort_order=asc, limit=5. Cheapest videos: modality=video, sort_by=price, sort_order=asc, limit=5. First/last-frame videos: modality=video, supports_end_frame=true. Image editing/reference models: modality=image, supports_reference_images=true.",
+  "Examples: Cheapest images: modality=image, sort_by=price, sort_order=asc, limit=5. Cheapest videos: modality=video, sort_by=price, sort_order=asc, limit=5. Audio models and voices: modality=audio. First/last-frame videos: modality=video, supports_end_frame=true. Image editing/reference models: modality=image, supports_reference_images=true.",
   "Error handling: If no models match, retry with modality=all, remove search, or remove capability filters. Use refresh=true only when you need current model changes."
 ].join(" ");
 
 const listModelsSchema = z.object({
   modality: z
-    .enum(["all", "image", "video"])
+    .enum(["all", "image", "video", "audio"])
     .default("all")
-    .describe("Filter models by modality: all, image, or video. Use video before video generation and image before image generation/editing."),
+    .describe("Filter models by modality: all, image, video, or audio. Use audio before speech, music, or sound-effect generation."),
   search: z
     .string()
     .trim()
@@ -71,7 +71,7 @@ const listModelsSchema = z.object({
   supports_audio: z
     .boolean()
     .optional()
-    .describe("Optional filter for models that output audio or support video audio_output."),
+    .describe("Optional filter for audio catalog models or visual models that output audio or support video audio_output."),
   refresh: z
     .boolean()
     .default(false)
@@ -213,6 +213,15 @@ function formatModels(
       lines.push(`- Image capabilities: \`${JSON.stringify(model.image_capabilities)}\``);
     }
 
+    if (model.audio_capabilities) {
+      lines.push(`- Audio capabilities: \`${JSON.stringify(model.audio_capabilities)}\``);
+    }
+
+    const voices = stringArray(model.voices);
+    if (voices.length) {
+      lines.push(`- Voices: ${voices.join(", ")}`);
+    }
+
     lines.push("");
   }
 
@@ -235,6 +244,10 @@ function formatModelSummary(model: PollinationsModel): string {
     `- Capabilities: ${summary.key_capabilities.length ? summary.key_capabilities.join(", ") : "none listed"}`
   ];
 
+  if (summary.voices.length) {
+    lines.push(`- Voices: ${summary.voices.join(", ")}`);
+  }
+
   if (summary.paid_only) {
     lines.push("- Paid only: yes");
   }
@@ -253,6 +266,7 @@ function toModelSummary(model: PollinationsModel): {
   max_reference_images: number;
   paid_only: boolean;
   key_capabilities: string[];
+  voices: string[];
 } {
   return {
     name: String(model.name ?? model.id ?? "unnamed-model"),
@@ -264,10 +278,12 @@ function toModelSummary(model: PollinationsModel): {
     output_modalities: model.output_modalities ?? [],
     max_reference_images: model.max_reference_images ?? 0,
     paid_only: model.paid_only ?? false,
+    voices: Array.isArray(model.voices) ? model.voices.map(String) : [],
     key_capabilities: [
       ...stringArray(model.capabilities),
       ...stringArray(model.video_capabilities),
-      ...stringArray(model.image_capabilities)
+      ...stringArray(model.image_capabilities),
+      ...stringArray(model.audio_capabilities)
     ]
   };
 }

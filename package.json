@@ -1,7 +1,7 @@
 {
   "name": "@pinkpixel/nectar-mcp",
-  "version": "1.0.0",
-  "description": "A stdio MCP server for Pollinations image and video generation.",
+  "version": "1.1.0",
+  "description": "A stdio MCP server for Pollinations image, video, and audio generation.",
   "author": "Pink Pixel",
   "license": "Apache-2.0",
   "repository": {
@@ -22,6 +22,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test tests/*.test.mjs",
     "start": "node dist/index.js"
   },
   "keywords": [
@@ -29,6 +30,7 @@
     "pollinations",
     "image-generation",
     "video-generation",
+    "audio-generation",
     "stdio"
   ],
   "dependencies": {

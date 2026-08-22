@@ -7,9 +7,4 @@ node_modules/
 *.log
 npm-debug.log*
 
-API.md
-CHANGELOG.md
-ERRORS.md
-MEMORY.md
-OVERVIEW.md
-ROADMAP.md
+DOCS/

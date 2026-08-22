@@ -12,19 +12,20 @@
 
 # Nectar MCP
 
-Nectar is a stdio MCP server for Pollinations image and video generation. It gives MCP clients a small, focused toolset for generating images, editing images, generating videos, listing available image/video models, and checking pollen balance.
+Nectar is a stdio MCP server for Pollinations image, video, and audio generation. It gives MCP clients a focused set of creative media tools.
 
-It is intentionally not a full Pollinations wrapper. No text generation, no audio, no embeddings, no sprawling control panel. Just the creative media tools this server actually needs.
+You can generate and edit images, create videos, and generate speech, music, or sound effects. Nectar also lists live models and checks pollen balance. It is intentionally not a full Pollinations wrapper. Text generation, transcription, embeddings, and unrelated account tools remain out of scope.
 
 ## Tools
 
 | Tool | Purpose |
 | --- | --- |
-| `pollinations_list_models` | Lists current image and video models from Pollinations using a 15-minute cache, compact summaries by default, sorting, and capability filters. |
-| `pollinations_get_model_details` | Returns full metadata for one model by name or alias. |
+| `pollinations_list_models` | Lists current image, video, and audio models from Pollinations using separate 15-minute catalog caches, compact summaries, sorting, and capability filters. |
+| `pollinations_get_model_details` | Returns full metadata for one image, video, or audio model by name or alias. |
 | `pollinations_generate_image` | Generates an image from a text prompt with model, size/dimensions, quality, seed, safety, transparency, prompt enhancement, negative prompt, reference image, and response format options. |
 | `pollinations_edit_image` | Edits one or more image URLs using a text prompt, with model, size/dimensions, quality, seed, safety, transparency, prompt enhancement, negative prompt, and response format options. |
 | `pollinations_generate_video` | Generates a video from a text prompt, with model, duration, aspect ratio, resolution, seed, audio, safety, quality, and reference-frame controls. |
+| `pollinations_generate_audio` | Generates speech, music, or sound effects with a selected audio model and optional voice, then saves the returned audio locally by default. |
 | `pollinations_check_balance` | Checks the authenticated pollen balance or API key budget. |
 
 ## Requirements
@@ -34,7 +35,7 @@ It is intentionally not a full Pollinations wrapper. No text generation, no audi
 
 Model listing does not require authentication. Generation and balance tools require `POLLINATIONS_API_KEY`.
 
-Generated images, edited images, and videos are saved locally by default. Set `NECTAR_OUTPUT_DIR` in your MCP client env block to choose the default output folder, or pass `output_dir` per tool call.
+Generated images, edited images, videos, and audio are saved locally by default. Set `NECTAR_OUTPUT_DIR` in your MCP client environment block to choose the default output folder. You can also pass `output_dir` per tool call.
 
 ## Install
 
@@ -102,17 +103,32 @@ Edit this image URL so the background is transparent and the subject looks more 
 Generate a 6 second 16:9 video of a glowing pollen trail drifting across a dark studio surface.
 ```
 
+```text
+Generate a warm spoken welcome with the nova voice using a current Pollinations speech model.
+```
+
+```text
+Generate a short lo-fi instrumental with soft piano, brushed drums, and a quiet vinyl texture.
+```
+
+```text
+Generate the sound of a heavy wooden door closing in a large stone hall.
+```
+
 ## Notes
 
 - Image generation uses Pollinations' OpenAI-compatible image generation endpoint.
 - Image editing currently supports image URLs. Local multipart file upload is intentionally left out of v1.
-- Image/video tools default to `save_output: true`, converting base64 responses and downloaded URLs into local files.
+- Image, video, and audio tools default to `save_output: true`, converting base64 responses and downloaded URLs into local files.
 - Image generation and image editing default to Pollinations `response_format: "b64_json"` because local decoding is the most reliable save path.
 - Saved files go to `output_dir`, `NECTAR_OUTPUT_DIR`, or `./nectar-output`, in that order.
 - Saved Pollinations media URLs are downloaded with the configured `POLLINATIONS_API_KEY`. Nectar does not send that key to non-Pollinations URLs.
 - Tool descriptions intentionally include model examples, parameter guidance, return shape notes, and error-handling hints so MCP clients have enough context to call the tools correctly.
-- Model listing is compact by default. Use `pollinations_get_model_details` when an agent needs full raw metadata for one model.
+- Model listing is compact by default. Audio discovery reads `/audio/models`, including live voice metadata when Pollinations supplies it.
+- Use `pollinations_get_model_details` when an agent needs full raw metadata for one model.
 - Video generation returns the final media URL and response metadata.
+- Audio generation uses `GET /audio/{text}`. The selected model determines whether the prompt produces speech, music, or a sound effect.
+- Audio saving detects common MP3, WAV, FLAC, Ogg/Opus, AAC, MP4 audio, WebM audio, and PCM media types.
 - Model support varies by capability, so call `pollinations_list_models` before using model-specific options.
 - The server never stores your API key. Your MCP client passes it through the process environment.
 

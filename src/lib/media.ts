@@ -118,12 +118,16 @@ async function downloadMedia(
       throw new Error(`download failed with HTTP ${response.status}`);
     }
 
-    const mediaType = response.headers.get("content-type")?.split(";")[0]?.trim();
+    const declaredMediaType = response.headers.get("content-type")?.split(";")[0]?.trim();
     const buffer = Buffer.from(await response.arrayBuffer());
+    const detectedMediaType = mediaTypeFromBuffer(buffer);
+    const mediaType = declaredMediaType && declaredMediaType !== "application/octet-stream"
+      ? declaredMediaType
+      : detectedMediaType ?? declaredMediaType;
     const extension =
       extensionFromMediaType(mediaType) ??
       extensionFromUrl(url) ??
-      extensionFromMediaType(mediaTypeFromBuffer(buffer)) ??
+      extensionFromMediaType(detectedMediaType) ??
       "bin";
     const filePath = await buildOutputPath(options, extension);
 
@@ -133,7 +137,7 @@ async function downloadMedia(
       path: filePath,
       source: "url",
       bytes: buffer.byteLength,
-      mediaType: mediaType ?? mediaTypeFromBuffer(buffer),
+      mediaType,
       originalUrl: url
     };
   } finally {
@@ -195,6 +199,34 @@ function mediaTypeFromBuffer(buffer: Buffer): string | undefined {
     return "image/webp";
   }
 
+  if (
+    buffer.subarray(0, 4).toString("ascii") === "RIFF" &&
+    buffer.subarray(8, 12).toString("ascii") === "WAVE"
+  ) {
+    return "audio/wav";
+  }
+
+  if (buffer[0] === 0xff && (buffer[1] & 0xf6) === 0xf0) {
+    return "audio/aac";
+  }
+
+  if (
+    buffer.subarray(0, 3).toString("ascii") === "ID3" ||
+    (buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0)
+  ) {
+    return "audio/mpeg";
+  }
+
+  if (buffer.subarray(0, 4).toString("ascii") === "fLaC") {
+    return "audio/flac";
+  }
+
+  if (buffer.subarray(0, 4).toString("ascii") === "OggS") {
+    return buffer.subarray(0, 64).includes(Buffer.from("OpusHead"))
+      ? "audio/opus"
+      : "audio/ogg";
+  }
+
   if (buffer.subarray(4, 8).toString("ascii") === "ftyp") {
     return "video/mp4";
   }
@@ -217,6 +249,31 @@ function extensionFromMediaType(mediaType: string | undefined): string | undefin
       return "mp4";
     case "video/webm":
       return "webm";
+    case "audio/mpeg":
+    case "audio/mp3":
+      return "mp3";
+    case "audio/wav":
+    case "audio/x-wav":
+    case "audio/wave":
+    case "audio/vnd.wave":
+      return "wav";
+    case "audio/flac":
+    case "audio/x-flac":
+      return "flac";
+    case "audio/ogg":
+    case "application/ogg":
+      return "ogg";
+    case "audio/opus":
+      return "opus";
+    case "audio/aac":
+      return "aac";
+    case "audio/mp4":
+      return "m4a";
+    case "audio/webm":
+      return "webm";
+    case "audio/pcm":
+    case "audio/l16":
+      return "pcm";
     case "application/octet-stream":
       return undefined;
     default:
